@@ -34,7 +34,7 @@ const chartData = computed(() => {
       },
       {
         label: 'Kosten',
-        data: entries.map((entry) => (Number(entry.liters) || 0) * (Number(entry.cost) || 0)),
+        data: entries.map((entry) => Number(entry.totalCost) || ((Number(entry.liters) || 0) * (Number(entry.pricePerLiter ?? entry.cost) || 0))),
         backgroundColor: '#38bdf820',
         borderColor: '#38bdf8',
         borderWidth: 2,
@@ -125,6 +125,10 @@ function removeEntry(id) {
             <dd class="font-medium">{{ formatCurrency(fuelStore.totalCost) }}</dd>
           </div>
           <div class="flex justify-between">
+            <dt>Ø Preis pro Liter</dt>
+            <dd class="font-medium">{{ formatCurrency(fuelStore.totalLiters ? fuelStore.totalCost / fuelStore.totalLiters : 0) }}</dd>
+          </div>
+          <div class="flex justify-between">
             <dt>Ø Liter/100km</dt>
             <dd class="font-medium">{{ formatNumber(fuelStore.averageConsumption.lPer100km) }}</dd>
           </div>
@@ -156,7 +160,7 @@ function removeEntry(id) {
               <td class="px-4 py-3">{{ formatDate(entry.date) }}</td>
               <td class="px-4 py-3">{{ bikeName(entry.bikeId) }}</td>
               <td class="px-4 py-3">{{ formatNumber(entry.liters, 1) }} L</td>
-              <td class="px-4 py-3">{{ formatCurrency(entry.cost) }}</td>
+            <td class="px-4 py-3">{{ formatCurrency(entry.totalCost ?? (Number(entry.liters) || 0) * (Number(entry.pricePerLiter ?? entry.cost) || 0)) }}</td>
               <td class="px-4 py-3">{{ formatNumber(entry.distance, 0) }} km</td>
               <td class="px-4 py-3">{{ entry.notes || '—' }}</td>
               <td class="px-4 py-3 text-right">

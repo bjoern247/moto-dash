@@ -45,7 +45,7 @@ const stats = computed(() => {
   )
   const combinedCost = fuel + maintenance + purchase * 0.3
   const distance = totalDistance.value ?? 0
-  const liters = totalLiters.value ?? 0
+  const liters = totalLiters.value ?? fuelStore.totalLiters ?? 0
   const avgConsumption = averageConsumption.value?.lPer100km ?? 0
   const estimatedDistance = !distance && avgConsumption > 0
     ? (liters / avgConsumption) * 100

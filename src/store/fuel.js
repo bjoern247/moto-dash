@@ -15,7 +15,7 @@ export const useFuelStore = defineStore('fuel', () => {
     try {
       const q = query(collection(db, 'fuel'), orderBy('date', 'desc'))
       const snapshot = await getDocs(q)
-      entries.value = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+      entries.value = snapshot.docs.map((doc) => normalizeEntry(doc.id, doc.data()))
     } catch (error) {
       lastError.value = error
       throw error

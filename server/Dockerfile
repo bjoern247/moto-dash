@@ -2,9 +2,9 @@ FROM node:20-alpine AS base
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+COPY package.json ./
 
-RUN npm ci --omit=dev
+RUN npm install --omit=dev
 
 COPY src ./src
 COPY .env.example* ./

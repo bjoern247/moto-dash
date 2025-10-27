@@ -1,10 +1,10 @@
-import { Router } from 'express'
-import crypto from 'node:crypto'
-import { z } from 'zod'
+const { Router } = require('express')
+const crypto = require('node:crypto')
+const { z } = require('zod')
 
 const router = Router()
 
-export default function createBikeRoutes (db) {
+module.exports = function createBikeRoutes (db) {
   const bikeSchema = z.object({
     id: z.string().optional(),
     name: z.string().min(1),

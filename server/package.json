@@ -1,7 +1,7 @@
 {
   "name": "moto-dash-backend",
   "version": "0.1.0",
-  "type": "module",
+  "type": "commonjs",
   "main": "src/server.js",
   "scripts": {
     "dev": "node --watch src/server.js",

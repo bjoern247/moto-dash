@@ -25,6 +25,7 @@ function mapBikeDoc (snapshot) {
     notes: data.notes ?? '',
     image: data.image ?? '',
     purchasePrice: Number(data.purchasePrice) || 0,
+    partsCost: Number(data.partsCost) || 0,
     name,
     createdAt: data.createdAt ?? '',
     updatedAt: data.updatedAt ?? '',
@@ -73,6 +74,7 @@ export const useBikeStore = defineStore('bikes', () => {
       notes: '',
       image: imageUrl,
       purchasePrice: Number(data.purchasePrice) || 0,
+      partsCost: Number(data.partsCost) || 0,
       createdAt: new Date().toISOString(),
       ...data,
     })
@@ -85,10 +87,12 @@ export const useBikeStore = defineStore('bikes', () => {
     const patch = { ...payload }
     const imageUrl = patch.image ?? ''
     const purchasePrice = Number(patch.purchasePrice) || 0
+    const partsCost = Number(patch.partsCost ?? patch.partsTotal) || 0
     await updateDoc(doc(db, 'bikes', id), {
       ...patch,
       image: imageUrl,
-       purchasePrice,
+      purchasePrice,
+      partsCost,
       updatedAt: new Date().toISOString(),
     })
     await fetchBikes()

@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 import { useBikeStore } from '../store/bikes'
 import { useMaintenanceStore } from '../store/maintenance'
 import { useFuelStore } from '../store/fuel'
+import { usePartStore } from '../store/parts'
 import { formatNumber, formatCurrency } from '../utils/formatters'
 import BikeCard from '../components/BikeCard.vue'
 import StatsChart from '../components/StatsChart.vue'
@@ -11,6 +12,7 @@ import StatsChart from '../components/StatsChart.vue'
 const bikeStore = useBikeStore()
 const maintenanceStore = useMaintenanceStore()
 const fuelStore = useFuelStore()
+const partStore = usePartStore()
 
 const { bikes, totalCount, totalMileage } = storeToRefs(bikeStore)
 const { totalCost: maintenanceCost } = storeToRefs(maintenanceStore)
@@ -20,6 +22,7 @@ const {
   totalDistance,
   totalLiters,
 } = storeToRefs(fuelStore)
+const { totalPartCost } = storeToRefs(partStore)
 
 const defaultFuelAverage = Object.freeze({ lPer100km: 0, costPerKm: 0 })
 
@@ -33,6 +36,9 @@ onMounted(async () => {
   if (!fuelStore.entries.length) {
     await fuelStore.fetchEntries()
   }
+  if (!partStore.parts.length) {
+    await partStore.fetchParts()
+  }
 })
 
 const stats = computed(() => {
@@ -43,7 +49,8 @@ const stats = computed(() => {
     (sum, bike) => sum + (Number(bike.purchasePrice) || 0),
     0
   )
-  const combinedCost = fuel + maintenance + purchase * 0.3
+  const parts = totalPartCost.value ?? 0
+  const combinedCost = fuel + maintenance + parts + purchase * 0.3
   const distance = totalDistance.value ?? 0
   const liters = totalLiters.value ?? fuelStore.totalLiters ?? 0
   const avgConsumption = averageConsumption.value?.lPer100km ?? 0
@@ -55,7 +62,7 @@ const stats = computed(() => {
     ? fuel / effectiveOperationalDistance
     : 0
   const totalCostPerKm = mileage
-    ? (fuel + maintenance + purchase * 0.3) / mileage
+    ? (fuel + maintenance + parts + purchase * 0.3) / mileage
     : 0
   const avgFuelPrice = liters ? fuel / liters : 0
 
@@ -68,6 +75,7 @@ const stats = computed(() => {
     totalCostPerKm,
     operationalCostPerKm,
     averageFuelPrice: avgFuelPrice,
+    partsCost: parts,
   }
 })
 

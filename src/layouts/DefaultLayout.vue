@@ -5,11 +5,11 @@ import { useRoute } from 'vue-router'
 const menuItems = [
   { to: { name: 'dashboard' }, label: 'Dashboard', icon: '🏠' },
   { to: { name: 'bikes' }, label: 'Bikes', icon: '🏍️' },
-  { to: { name: 'maintenance' }, label: 'Wartung', icon: '🛠️' },
+  { to: { name: 'maintenance' }, label: 'Servicehistorie', icon: '📅' },
   { to: { name: 'fuel' }, label: 'Tanken', icon: '⛽' },
   { to: { name: 'tours' }, label: 'Touren', icon: '🗺️' },
-  { to: { name: 'parts' }, label: 'Ersatzteile und Zubehör', icon: '⚙️' },
-  { to: { name: 'settings' }, label: 'Einstellungen', icon: '⚡' },
+  { to: { name: 'parts' }, label: 'Ersatzteile und Zubehör', icon: '🛠️' },
+  { to: { name: 'settings' }, label: 'Einstellungen', icon: '⚙️' },
 ]
 
 const route = useRoute()
@@ -48,10 +48,10 @@ watch(
     <header class="bg-white/80 shadow-sm backdrop-blur dark:bg-surface/80">
       <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
         <div class="flex items-center gap-3">
-          <span class="text-2xl">🏍</span>
+          <img src="/favicon.svg" alt="MotoDash Logo" class="h-10 w-10" />
           <div>
             <h1 class="text-xl font-semibold">MotoDash</h1>
-            <p class="text-sm text-slate-500 dark:text-slate-400">Self-Hosted Motorrad-Dashboard</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Björn's Moto Dashboard</p>
           </div>
         </div>
         <button
@@ -69,9 +69,13 @@ watch(
             v-for="item in menuItems"
             :key="item.label"
             :to="item.to"
-            class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white"
+            class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition hover:bg-slate-100 dark:hover:bg-slate-800 hover:no-underline focus:no-underline"
             :class="{
               'bg-accent/10 text-accent border border-accent/60 shadow-sm': route.name === item.to.name,
+              'text-slate-900 dark:text-white': route.name === item.to.name,
+              'text-slate-600 dark:text-slate-300': route.name !== item.to.name,
+              'hover:text-slate-900 dark:hover:text-white': route.name !== item.to.name,
+              'no-underline': true,
             }"
           >
             <span aria-hidden="true">{{ item.icon }}</span>

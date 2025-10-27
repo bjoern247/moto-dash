@@ -1,5 +1,6 @@
 <script setup>
 import { Bar } from 'vue-chartjs'
+import { computed } from 'vue'
 import {
   Chart as ChartJS,
   Title,
@@ -13,7 +14,7 @@ import {
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, Filler)
 
-defineProps({
+const props = defineProps({
   data: {
     type: Object,
     required: true,
@@ -22,10 +23,19 @@ defineProps({
     type: Object,
     default: () => ({}),
   },
+  axisOrientation: {
+    type: String,
+    default: 'vertical',
+  },
 })
+
+const computedOptions = computed(() => ({
+  indexAxis: props.axisOrientation === 'horizontal' ? 'y' : 'x',
+  ...props.options,
+}))
 </script>
 
 <template>
-  <Bar :data="data" :options="options" />
+  <Bar :data="data" :options="computedOptions" />
 </template>
 

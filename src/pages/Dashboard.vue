@@ -14,7 +14,12 @@ const fuelStore = useFuelStore()
 
 const { bikes, totalCount, totalMileage } = storeToRefs(bikeStore)
 const { totalCost: maintenanceCost } = storeToRefs(maintenanceStore)
-const { totalCost: fuelCost, averageConsumption } = storeToRefs(fuelStore)
+const {
+  totalCost: fuelCost,
+  averageConsumption,
+  totalDistance,
+  totalLiters,
+} = storeToRefs(fuelStore)
 
 const defaultFuelAverage = Object.freeze({ lPer100km: 0, costPerKm: 0 })
 
@@ -30,13 +35,36 @@ onMounted(async () => {
   }
 })
 
-const stats = computed(() => ({
-  bikes: totalCount.value ?? 0,
-  mileage: totalMileage.value ?? 0,
-  maintenanceCost: maintenanceCost.value ?? 0,
-  fuelCost: fuelCost.value ?? 0,
-  fuelAverage: averageConsumption.value ?? defaultFuelAverage,
-}))
+const stats = computed(() => {
+  const mileage = totalMileage.value ?? 0
+  const maintenance = maintenanceCost.value ?? 0
+  const fuel = fuelCost.value ?? 0
+  const purchase = bikeStore.bikes.reduce(
+    (sum, bike) => sum + (Number(bike.purchasePrice) || 0),
+    0
+  )
+  const combinedCost = fuel + maintenance + purchase
+  const distance = totalDistance.value ?? 0
+  const liters = totalLiters.value ?? 0
+  const operationalCostPerKm = distance
+    ? fuel / distance
+    : 0
+  const totalCostPerKm = mileage
+    ? (fuel + maintenance + purchase * 0.3) / mileage
+    : 0
+  const avgFuelPrice = liters ? fuel / liters : 0
+
+  return {
+    bikes: totalCount.value ?? 0,
+    mileage,
+    combinedCost,
+    fuelCost: fuel,
+    fuelAverage: averageConsumption.value ?? defaultFuelAverage,
+    totalCostPerKm,
+    operationalCostPerKm,
+    averageFuelPrice: avgFuelPrice,
+  }
+})
 
 const chartData = computed(() => {
   const list = bikes.value ?? []
@@ -50,6 +78,8 @@ const chartData = computed(() => {
         borderColor: '#eab308',
         borderWidth: 2,
         tension: 0.25,
+        barPercentage: 0.45,
+        categoryPercentage: 0.45,
       },
     ],
   }
@@ -99,8 +129,8 @@ const chartOptions = {
           <dd class="text-2xl font-semibold">{{ formatNumber(stats.mileage, 0) }} km</dd>
         </div>
         <div class="rounded-xl bg-white/10 p-4">
-          <dt class="text-sm text-slate-200">Wartungskosten</dt>
-          <dd class="text-2xl font-semibold">{{ formatCurrency(stats.maintenanceCost) }}</dd>
+          <dt class="text-sm text-slate-200">Gesamtkosten Kauf & Wartung</dt>
+          <dd class="text-2xl font-semibold">{{ formatCurrency(stats.combinedCost) }}</dd>
         </div>
         <div class="rounded-xl bg-white/10 p-4">
           <dt class="text-sm text-slate-200">Treibstoffkosten</dt>
@@ -119,7 +149,7 @@ const chartOptions = {
             </RouterLink>
           </header>
           <div class="h-72">
-            <StatsChart :data="chartData" :options="chartOptions" />
+            <StatsChart :data="chartData" :options="chartOptions" axis-orientation="horizontal" />
           </div>
         </article>
       </div>
@@ -136,9 +166,21 @@ const chartOptions = {
               </span>
             </li>
             <li class="flex justify-between">
-              <span>Kosten pro km</span>
+              <span>Ø Preis pro Liter</span>
               <span class="font-medium text-slate-900 dark:text-slate-100">
-                {{ formatCurrency(stats.fuelAverage.costPerKm) }}
+                {{ formatCurrency(stats.averageFuelPrice) }}
+              </span>
+            </li>
+            <li class="flex justify-between">
+              <span>Kosten pro km (Betrieb)</span>
+              <span class="font-medium text-slate-900 dark:text-slate-100">
+                {{ formatCurrency(stats.operationalCostPerKm) }}
+              </span>
+            </li>
+            <li class="flex justify-between">
+              <span>Kosten pro km (Gesamt)</span>
+              <span class="font-medium text-slate-900 dark:text-slate-100">
+                {{ formatCurrency(stats.totalCostPerKm) }}
               </span>
             </li>
           </ul>

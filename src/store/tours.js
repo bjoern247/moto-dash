@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { apiRequest } from '../utils/api'
+import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, orderBy, query } from 'firebase/firestore'
+import { db } from '../firebase'
 
 export const useTourStore = defineStore('tours', () => {
   const tours = ref([])
@@ -11,7 +12,9 @@ export const useTourStore = defineStore('tours', () => {
     isLoading.value = true
     lastError.value = null
     try {
-      tours.value = await apiRequest('/tours')
+      const q = query(collection(db, 'tours'), orderBy('createdAt', 'desc'))
+      const snapshot = await getDocs(q)
+      tours.value = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
     } catch (error) {
       lastError.value = error
       throw error
@@ -21,27 +24,27 @@ export const useTourStore = defineStore('tours', () => {
   }
 
   async function addTour (payload) {
-    const tour = await apiRequest('/tours', {
-      method: 'POST',
-      body: JSON.stringify(payload),
+    const docRef = await addDoc(collection(db, 'tours'), {
+      createdAt: new Date().toISOString(),
+      ...payload,
     })
-    tours.value = [tour, ...tours.value]
-    return tour
+    tours.value = [{ id: docRef.id, ...payload }, ...tours.value]
+    return { id: docRef.id, ...payload }
   }
 
   async function updateTour (id, patch) {
-    const updated = await apiRequest(`/tours/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(patch),
+    await updateDoc(doc(db, 'tours', id), {
+      ...patch,
+      updatedAt: new Date().toISOString(),
     })
     tours.value = tours.value.map((tour) =>
-      tour.id === id ? updated : tour
+      tour.id === id ? { ...tour, ...patch } : tour
     )
-    return updated
+    return tours.value.find((tour) => tour.id === id)
   }
 
   async function removeTour (id) {
-    await apiRequest(`/tours/${id}`, { method: 'DELETE' })
+    await deleteDoc(doc(db, 'tours', id))
     tours.value = tours.value.filter((tour) => tour.id !== id)
   }
 

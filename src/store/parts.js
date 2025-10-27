@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { apiRequest } from '../utils/api'
+import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, orderBy, query } from 'firebase/firestore'
+import { db } from '../firebase'
 
 export const usePartStore = defineStore('parts', () => {
   const parts = ref([])
@@ -11,7 +12,9 @@ export const usePartStore = defineStore('parts', () => {
     isLoading.value = true
     lastError.value = null
     try {
-      parts.value = await apiRequest('/parts')
+      const q = query(collection(db, 'parts'), orderBy('createdAt', 'desc'))
+      const snapshot = await getDocs(q)
+      parts.value = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
     } catch (error) {
       lastError.value = error
       throw error
@@ -21,27 +24,27 @@ export const usePartStore = defineStore('parts', () => {
   }
 
   async function addPart (payload) {
-    const part = await apiRequest('/parts', {
-      method: 'POST',
-      body: JSON.stringify(payload),
+    const docRef = await addDoc(collection(db, 'parts'), {
+      createdAt: new Date().toISOString(),
+      ...payload,
     })
-    parts.value = [part, ...parts.value]
-    return part
+    parts.value = [{ id: docRef.id, ...payload }, ...parts.value]
+    return { id: docRef.id, ...payload }
   }
 
   async function updatePart (id, patch) {
-    const updated = await apiRequest(`/parts/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(patch),
+    await updateDoc(doc(db, 'parts', id), {
+      ...patch,
+      updatedAt: new Date().toISOString(),
     })
     parts.value = parts.value.map((part) =>
-      part.id === id ? updated : part
+      part.id === id ? { ...part, ...patch } : part
     )
-    return updated
+    return parts.value.find((part) => part.id === id)
   }
 
   async function removePart (id) {
-    await apiRequest(`/parts/${id}`, { method: 'DELETE' })
+    await deleteDoc(doc(db, 'parts', id))
     parts.value = parts.value.filter((part) => part.id !== id)
   }
 

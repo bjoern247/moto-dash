@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { apiRequest } from '../utils/api'
+import { collection, addDoc, doc, getDocs, updateDoc, deleteDoc, orderBy, query } from 'firebase/firestore'
+import { db } from '../firebase'
 
 export const useMaintenanceStore = defineStore('maintenance', () => {
   const maintenance = ref([])
@@ -11,7 +12,9 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
     isLoading.value = true
     lastError.value = null
     try {
-      maintenance.value = await apiRequest('/maintenance')
+      const q = query(collection(db, 'maintenance'), orderBy('date', 'desc'))
+      const snapshot = await getDocs(q)
+      maintenance.value = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
     } catch (error) {
       lastError.value = error
       throw error
@@ -21,27 +24,27 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
   }
 
   async function addEntry (payload) {
-    const entry = await apiRequest('/maintenance', {
-      method: 'POST',
-      body: JSON.stringify(payload),
+    const docRef = await addDoc(collection(db, 'maintenance'), {
+      createdAt: new Date().toISOString(),
+      ...payload,
     })
-    maintenance.value = [entry, ...maintenance.value]
-    return entry
+    maintenance.value = [{ id: docRef.id, ...payload }, ...maintenance.value]
+    return { id: docRef.id, ...payload }
   }
 
   async function updateEntry (id, patch) {
-    const updated = await apiRequest(`/maintenance/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(patch),
+    await updateDoc(doc(db, 'maintenance', id), {
+      ...patch,
+      updatedAt: new Date().toISOString(),
     })
     maintenance.value = maintenance.value.map((entry) =>
-      entry.id === id ? updated : entry
+      entry.id === id ? { ...entry, ...patch } : entry
     )
-    return updated
+    return maintenance.value.find((entry) => entry.id === id)
   }
 
   async function removeEntry (id) {
-    await apiRequest(`/maintenance/${id}`, { method: 'DELETE' })
+    await deleteDoc(doc(db, 'maintenance', id))
     maintenance.value = maintenance.value.filter((entry) => entry.id !== id)
   }
 

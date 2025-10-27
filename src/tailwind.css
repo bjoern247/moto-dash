@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  :root.dark {
+    color-scheme: dark;
+  }
+
+  html,
+  body {
+    @apply min-h-screen bg-surface text-slate-100 antialiased transition-colors duration-300 ease-out;
+  }
+
+  body {
+    @apply bg-white text-slate-900 dark:bg-surface dark:text-slate-200;
+  }
+
+  a {
+    @apply text-accent hover:underline;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl bg-white/80 p-4 shadow-md backdrop-blur dark:bg-surface/80;
+  }
+}
+

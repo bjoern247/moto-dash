@@ -6,6 +6,8 @@ COPY package.json ./
 
 RUN npm install --omit=dev
 
+RUN npm install sqlite
+
 COPY src ./src
 
 EXPOSE 4000

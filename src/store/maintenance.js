@@ -1,20 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4000'
-
-async function request (path, options) {
-  const response = await fetch(`${API_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options,
-  })
-  if (!response.ok) {
-    const message = await response.text()
-    throw new Error(message || `API Fehler (${response.status})`)
-  }
-  if (response.status === 204) return null
-  return response.json()
-}
+import { apiRequest } from '../utils/api'
 
 export const useMaintenanceStore = defineStore('maintenance', () => {
   const maintenance = ref([])
@@ -25,7 +11,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
     isLoading.value = true
     lastError.value = null
     try {
-      maintenance.value = await request('/maintenance')
+      maintenance.value = await apiRequest('/maintenance')
     } catch (error) {
       lastError.value = error
       throw error
@@ -35,7 +21,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
   }
 
   async function addEntry (payload) {
-    const entry = await request('/maintenance', {
+    const entry = await apiRequest('/maintenance', {
       method: 'POST',
       body: JSON.stringify(payload),
     })
@@ -44,7 +30,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
   }
 
   async function updateEntry (id, patch) {
-    const updated = await request(`/maintenance/${id}`, {
+    const updated = await apiRequest(`/maintenance/${id}`, {
       method: 'PUT',
       body: JSON.stringify(patch),
     })
@@ -55,7 +41,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
   }
 
   async function removeEntry (id) {
-    await request(`/maintenance/${id}`, { method: 'DELETE' })
+    await apiRequest(`/maintenance/${id}`, { method: 'DELETE' })
     maintenance.value = maintenance.value.filter((entry) => entry.id !== id)
   }
 

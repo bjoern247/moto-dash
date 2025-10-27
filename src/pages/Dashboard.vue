@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useBikeStore } from '../store/bikes'
 import { useMaintenanceStore } from '../store/maintenance'
@@ -17,6 +17,18 @@ const { totalCost: maintenanceCost } = storeToRefs(maintenanceStore)
 const { totalCost: fuelCost, averageConsumption } = storeToRefs(fuelStore)
 
 const defaultFuelAverage = Object.freeze({ lPer100km: 0, costPerKm: 0 })
+
+onMounted(async () => {
+  if (!bikes.value.length) {
+    await bikeStore.fetchBikes()
+  }
+  if (!maintenanceStore.maintenance.length) {
+    await maintenanceStore.fetchMaintenance()
+  }
+  if (!fuelStore.entries.length) {
+    await fuelStore.fetchEntries()
+  }
+})
 
 const stats = computed(() => ({
   bikes: totalCount.value ?? 0,

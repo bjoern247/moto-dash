@@ -1,20 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4000'
-
-async function request (path, options) {
-  const response = await fetch(`${API_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options,
-  })
-  if (!response.ok) {
-    const message = await response.text()
-    throw new Error(message || `API Fehler (${response.status})`)
-  }
-  if (response.status === 204) return null
-  return response.json()
-}
+import { apiRequest } from '../utils/api'
 
 export const useBikeStore = defineStore('bikes', () => {
   const bikes = ref([])
@@ -25,7 +11,7 @@ export const useBikeStore = defineStore('bikes', () => {
     isLoading.value = true
     lastError.value = null
     try {
-      bikes.value = await request('/bikes')
+      bikes.value = await apiRequest('/bikes')
     } catch (error) {
       lastError.value = error
       throw error
@@ -35,7 +21,7 @@ export const useBikeStore = defineStore('bikes', () => {
   }
 
   async function addBike (payload) {
-    const bike = await request('/bikes', {
+    const bike = await apiRequest('/bikes', {
       method: 'POST',
       body: JSON.stringify(payload),
     })
@@ -44,7 +30,7 @@ export const useBikeStore = defineStore('bikes', () => {
   }
 
   async function updateBike (id, patch) {
-    const updated = await request(`/bikes/${id}`, {
+    const updated = await apiRequest(`/bikes/${id}`, {
       method: 'PUT',
       body: JSON.stringify(patch),
     })
@@ -55,7 +41,7 @@ export const useBikeStore = defineStore('bikes', () => {
   }
 
   async function removeBike (id) {
-    await request(`/bikes/${id}`, { method: 'DELETE' })
+    await apiRequest(`/bikes/${id}`, { method: 'DELETE' })
     bikes.value = bikes.value.filter((bike) => bike.id !== id)
   }
 

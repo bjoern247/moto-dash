@@ -1,20 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4000'
-
-async function request (path, options) {
-  const response = await fetch(`${API_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options,
-  })
-  if (!response.ok) {
-    const message = await response.text()
-    throw new Error(message || `API Fehler (${response.status})`)
-  }
-  if (response.status === 204) return null
-  return response.json()
-}
+import { apiRequest } from '../utils/api'
 
 export const useTourStore = defineStore('tours', () => {
   const tours = ref([])
@@ -25,7 +11,7 @@ export const useTourStore = defineStore('tours', () => {
     isLoading.value = true
     lastError.value = null
     try {
-      tours.value = await request('/tours')
+      tours.value = await apiRequest('/tours')
     } catch (error) {
       lastError.value = error
       throw error
@@ -35,7 +21,7 @@ export const useTourStore = defineStore('tours', () => {
   }
 
   async function addTour (payload) {
-    const tour = await request('/tours', {
+    const tour = await apiRequest('/tours', {
       method: 'POST',
       body: JSON.stringify(payload),
     })
@@ -44,7 +30,7 @@ export const useTourStore = defineStore('tours', () => {
   }
 
   async function updateTour (id, patch) {
-    const updated = await request(`/tours/${id}`, {
+    const updated = await apiRequest(`/tours/${id}`, {
       method: 'PUT',
       body: JSON.stringify(patch),
     })
@@ -55,7 +41,7 @@ export const useTourStore = defineStore('tours', () => {
   }
 
   async function removeTour (id) {
-    await request(`/tours/${id}`, { method: 'DELETE' })
+    await apiRequest(`/tours/${id}`, { method: 'DELETE' })
     tours.value = tours.value.filter((tour) => tour.id !== id)
   }
 

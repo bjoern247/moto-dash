@@ -1,20 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4000'
-
-async function request (path, options) {
-  const response = await fetch(`${API_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options,
-  })
-  if (!response.ok) {
-    const message = await response.text()
-    throw new Error(message || `API Fehler (${response.status})`)
-  }
-  if (response.status === 204) return null
-  return response.json()
-}
+import { apiRequest } from '../utils/api'
 
 export const usePartStore = defineStore('parts', () => {
   const parts = ref([])
@@ -25,7 +11,7 @@ export const usePartStore = defineStore('parts', () => {
     isLoading.value = true
     lastError.value = null
     try {
-      parts.value = await request('/parts')
+      parts.value = await apiRequest('/parts')
     } catch (error) {
       lastError.value = error
       throw error
@@ -35,7 +21,7 @@ export const usePartStore = defineStore('parts', () => {
   }
 
   async function addPart (payload) {
-    const part = await request('/parts', {
+    const part = await apiRequest('/parts', {
       method: 'POST',
       body: JSON.stringify(payload),
     })
@@ -44,7 +30,7 @@ export const usePartStore = defineStore('parts', () => {
   }
 
   async function updatePart (id, patch) {
-    const updated = await request(`/parts/${id}`, {
+    const updated = await apiRequest(`/parts/${id}`, {
       method: 'PUT',
       body: JSON.stringify(patch),
     })
@@ -55,7 +41,7 @@ export const usePartStore = defineStore('parts', () => {
   }
 
   async function removePart (id) {
-    await request(`/parts/${id}`, { method: 'DELETE' })
+    await apiRequest(`/parts/${id}`, { method: 'DELETE' })
     parts.value = parts.value.filter((part) => part.id !== id)
   }
 

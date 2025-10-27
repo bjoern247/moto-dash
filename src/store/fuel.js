@@ -1,21 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { litersPer100km, costPerKilometer } from '../utils/formatters'
-
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4000'
-
-async function request (path, options) {
-  const response = await fetch(`${API_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options,
-  })
-  if (!response.ok) {
-    const message = await response.text()
-    throw new Error(message || `API Fehler (${response.status})`)
-  }
-  if (response.status === 204) return null
-  return response.json()
-}
+import { apiRequest } from '../utils/api'
 
 export const useFuelStore = defineStore('fuel', () => {
   const entries = ref([])
@@ -26,7 +12,7 @@ export const useFuelStore = defineStore('fuel', () => {
     isLoading.value = true
     lastError.value = null
     try {
-      entries.value = await request('/fuel')
+      entries.value = await apiRequest('/fuel')
     } catch (error) {
       lastError.value = error
       throw error
@@ -36,7 +22,7 @@ export const useFuelStore = defineStore('fuel', () => {
   }
 
   async function addEntry (payload) {
-    const entry = await request('/fuel', {
+    const entry = await apiRequest('/fuel', {
       method: 'POST',
       body: JSON.stringify(payload),
     })
@@ -45,7 +31,7 @@ export const useFuelStore = defineStore('fuel', () => {
   }
 
   async function updateEntry (id, patch) {
-    const updated = await request(`/fuel/${id}`, {
+    const updated = await apiRequest(`/fuel/${id}`, {
       method: 'PUT',
       body: JSON.stringify(patch),
     })
@@ -56,7 +42,7 @@ export const useFuelStore = defineStore('fuel', () => {
   }
 
   async function removeEntry (id) {
-    await request(`/fuel/${id}`, { method: 'DELETE' })
+    await apiRequest(`/fuel/${id}`, { method: 'DELETE' })
     entries.value = entries.value.filter((entry) => entry.id !== id)
   }
 

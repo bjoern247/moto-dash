@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, ref, computed } from 'vue'
+import { reactive, ref, computed, onMounted } from 'vue'
 import { useBikeStore } from '../store/bikes'
 import BikeCard from '../components/BikeCard.vue'
 
@@ -20,6 +20,12 @@ const showForm = ref(false)
 const sortedBikes = computed(() =>
   [...bikeStore.bikes].sort((a, b) => b.mileage - a.mileage)
 )
+
+onMounted(async () => {
+  if (!bikeStore.bikes.length) {
+    await bikeStore.fetchBikes()
+  }
+})
 
 function resetForm() {
   form.name = ''

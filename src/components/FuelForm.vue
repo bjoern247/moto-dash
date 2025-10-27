@@ -66,8 +66,14 @@ function cancel() {
         <input type="number" step="0.1" min="0" v-model.number="form.liters" class="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-700" />
       </label>
       <label class="flex flex-col gap-1 text-sm">
-        <span>Preis (€)</span>
-        <input type="number" step="0.01" min="0" v-model.number="form.cost" class="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-700" />
+        <span>Preis pro Liter (€)</span>
+        <input
+          type="number"
+          step="0.01"
+          min="0"
+          v-model.number="form.cost"
+          class="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-700"
+        />
       </label>
       <label class="flex flex-col gap-1 text-sm">
         <span>Kilometer seit letztem Tanken</span>

@@ -43,11 +43,16 @@ const stats = computed(() => {
     (sum, bike) => sum + (Number(bike.purchasePrice) || 0),
     0
   )
-  const combinedCost = fuel + maintenance + purchase
+  const combinedCost = fuel + maintenance + purchase * 0.3
   const distance = totalDistance.value ?? 0
   const liters = totalLiters.value ?? 0
-  const operationalCostPerKm = distance
-    ? fuel / distance
+  const avgConsumption = averageConsumption.value?.lPer100km ?? 0
+  const estimatedDistance = !distance && avgConsumption > 0
+    ? (liters / avgConsumption) * 100
+    : 0
+  const effectiveOperationalDistance = distance || estimatedDistance
+  const operationalCostPerKm = effectiveOperationalDistance
+    ? fuel / effectiveOperationalDistance
     : 0
   const totalCostPerKm = mileage
     ? (fuel + maintenance + purchase * 0.3) / mileage
@@ -129,7 +134,7 @@ const chartOptions = {
           <dd class="text-2xl font-semibold">{{ formatNumber(stats.mileage, 0) }} km</dd>
         </div>
         <div class="rounded-xl bg-white/10 p-4">
-          <dt class="text-sm text-slate-200">Gesamtkosten Kauf & Wartung</dt>
+          <dt class="text-sm text-slate-200">Gesamtkosten</dt>
           <dd class="text-2xl font-semibold">{{ formatCurrency(stats.combinedCost) }}</dd>
         </div>
         <div class="rounded-xl bg-white/10 p-4">

@@ -24,23 +24,86 @@ export const useFuelStore = defineStore('fuel', () => {
     }
   }
 
+  function normalizeEntry (id, data) {
+    const liters = Number(data.liters) || 0
+    const pricePerLiter = Number(data.pricePerLiter ?? data.unitPrice ?? data.cost ?? 0)
+    const totalCost = Number(data.totalCost ?? liters * pricePerLiter)
+    const distance = Number(data.distance) || 0
+
+    return {
+      id,
+      bikeId: data.bikeId ?? null,
+      date: data.date ?? new Date().toISOString().slice(0, 10),
+      notes: data.notes ?? '',
+      liters,
+      distance,
+      pricePerLiter,
+      totalCost,
+    }
+  }
+
   async function addEntry (payload) {
+    const liters = Number(payload.liters) || 0
+    const pricePerLiter = Number(payload.cost) || 0
+    const totalCost = liters * pricePerLiter
+
     const docRef = await addDoc(collection(db, 'fuel'), {
+      bikeId: payload.bikeId ?? null,
+      date: payload.date ?? new Date().toISOString().slice(0, 10),
+      notes: payload.notes ?? '',
+      liters,
+      distance: Number(payload.distance) || 0,
+      pricePerLiter,
+      totalCost,
       createdAt: new Date().toISOString(),
-      ...payload,
     })
-    entries.value = [{ id: docRef.id, ...payload }, ...entries.value]
-    return { id: docRef.id, ...payload }
+
+    const entry = normalizeEntry(docRef.id, {
+      ...payload,
+      liters,
+      pricePerLiter,
+      totalCost,
+    })
+
+    entries.value = [entry, ...entries.value]
+    return entry
   }
 
   async function updateEntry (id, patch) {
-    await updateDoc(doc(db, 'fuel', id), {
+    const liters = patch.liters != null ? Number(patch.liters) : undefined
+    const pricePerLiter = patch.cost != null ? Number(patch.cost) : undefined
+
+    const updatePayload = {
       ...patch,
       updatedAt: new Date().toISOString(),
-    })
+    }
+
+    if (liters != null) {
+      updatePayload.liters = liters
+    }
+    if (pricePerLiter != null) {
+      updatePayload.pricePerLiter = pricePerLiter
+    }
+
+    const current = entries.value.find((entry) => entry.id === id)
+    const nextLiters = liters != null ? liters : current?.liters ?? 0
+    const nextPricePerLiter = pricePerLiter != null ? pricePerLiter : current?.pricePerLiter ?? 0
+    updatePayload.totalCost = nextLiters * nextPricePerLiter
+
+    await updateDoc(doc(db, 'fuel', id), updatePayload)
+
     entries.value = entries.value.map((entry) =>
-      entry.id === id ? { ...entry, ...patch } : entry
+      entry.id === id
+        ? normalizeEntry(id, {
+            ...entry,
+            ...patch,
+            liters: nextLiters,
+            pricePerLiter: nextPricePerLiter,
+            totalCost: updatePayload.totalCost,
+          })
+        : entry
     )
+
     return entries.value.find((entry) => entry.id === id)
   }
 
@@ -54,7 +117,7 @@ export const useFuelStore = defineStore('fuel', () => {
     entries.value.reduce((sum, entry) => sum + (Number(entry.liters) || 0), 0)
   )
   const totalCost = computed(() =>
-    entries.value.reduce((sum, entry) => sum + (Number(entry.cost) || 0), 0)
+    entries.value.reduce((sum, entry) => sum + (Number(entry.totalCost) || 0), 0)
   )
   const totalDistance = computed(() =>
     entries.value.reduce((sum, entry) => sum + (Number(entry.distance) || 0), 0)
@@ -73,10 +136,11 @@ export const useFuelStore = defineStore('fuel', () => {
       (acc, entry) => {
         const liters = Number(entry.liters) || 0
         const distance = Number(entry.distance) || 0
-        const cost = Number(entry.cost) || 0
+        const pricePerLiter = Number(entry.pricePerLiter ?? entry.cost) || 0
+        const total = Number(entry.totalCost ?? liters * pricePerLiter)
         acc.totalLiters += liters
         acc.totalDistance += distance
-        acc.totalCost += cost
+        acc.totalCost += total
         return acc
       },
       { totalLiters: 0, totalDistance: 0, totalCost: 0 }

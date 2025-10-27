@@ -34,7 +34,7 @@ const chartData = computed(() => {
       },
       {
         label: 'Kosten',
-        data: entries.map((entry) => entry.cost),
+        data: entries.map((entry) => (Number(entry.liters) || 0) * (Number(entry.cost) || 0)),
         backgroundColor: '#38bdf820',
         borderColor: '#38bdf8',
         borderWidth: 2,

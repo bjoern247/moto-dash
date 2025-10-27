@@ -1,6 +1,5 @@
 <script setup>
 import { ref } from 'vue'
-import { removeState } from '../utils/db'
 
 const exportData = ref(null)
 const importError = ref('')
@@ -59,7 +58,6 @@ async function handleImport(event) {
 async function clearData() {
   if (!confirm('Alle gespeicherten Daten löschen?')) return
   const stores = ['bikes', 'maintenance', 'fuel', 'tours', 'parts']
-  await Promise.all(stores.map((key) => removeState(`persist:${key}`)))
   stores.forEach((key) => localStorage.removeItem(`persist:${key}`))
   window.location.reload()
 }
@@ -127,19 +125,6 @@ async function clearData() {
         @change="handleImport"
       />
       <p v-if="importError" class="text-sm text-red-500">{{ importError }}</p>
-    </article>
-
-    <article class="card space-y-4">
-      <header>
-        <h3 class="text-lg font-semibold">Synchronisation (LAN)</h3>
-        <p class="text-sm text-slate-500 dark:text-slate-400">
-          Optionale LAN-Synchronisation über Node Backend (zukünftig).
-        </p>
-      </header>
-      <p class="text-sm text-slate-500 dark:text-slate-400">
-        Die Synchronisationsfunktion befindet sich in Planung. Du wirst hier später die Verbindung zu einem
-        lokalen Node-Server konfigurieren können.
-      </p>
     </article>
 
     <article class="card space-y-4">

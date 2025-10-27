@@ -1,18 +1,15 @@
-FROM node:20-alpine AS base
+FROM node:20-slim
 
 WORKDIR /app
 
-COPY package.json ./
+COPY package*.json ./
 
-RUN npm install --omit=dev
+RUN npm ci --omit=dev
 
-RUN npm install sqlite
-
-COPY src ./src
+COPY . .
 
 EXPOSE 4000
-
 ENV PORT=4000
 
-CMD ["npm", "run", "start"]
-
+CMD ["npm", "start"]
+RUN ls -l node_modules/sqlite && ls -l node_modules/sqlite3
